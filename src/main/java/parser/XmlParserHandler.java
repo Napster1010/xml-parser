@@ -1,5 +1,6 @@
 package parser;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -15,6 +16,7 @@ public class XmlParserHandler extends DefaultHandler {
 	private List<String> b3ParamCodes, b9ParamCodes, b5ParamCodes;
 	private boolean b3Read, b5Read, b9Read, insideD1;
 	private String meterNumber, meterMakeCode, readingDate, b3Value, b5Value, b9Value;
+	private PrintWriter printWriter;
 
 	// stack to keep track of tags
 	private Stack<String> elementStack = new Stack<>();
@@ -45,21 +47,18 @@ public class XmlParserHandler extends DefaultHandler {
 				if(StringUtils.isBlank(this.b3Value))
 					throw new SAXException("B3 value is null/blank");
 
-				System.out.println(attributes.getValue("PARAMCODE") + ": " + this.b3Value);
 				this.b3Read = true;
 			} else if ("B5".equals(qName) && b5ParamCodes.contains(attributes.getValue("PARAMCODE")) && !this.b5Read) {
 				this.b5Value = attributes.getValue("VALUE");
 				if(StringUtils.isBlank(this.b5Value))
 					throw new SAXException("B5 value is null/blank");
 
-				System.out.println(attributes.getValue("PARAMCODE") + ": " + this.b5Value);
 				this.b5Read = true;
 			} else if ("B9".equals(qName) && b9ParamCodes.contains(attributes.getValue("PARAMCODE")) && !this.b9Read) {
 				this.b9Value = attributes.getValue("VALUE");
 				if(StringUtils.isBlank(this.b9Value))
 					throw new SAXException("B9 value is null/blank");
 
-				System.out.println(attributes.getValue("PARAMCODE") + ": " + this.b9Value);
 				this.b9Read = true;
 			}
 		}
@@ -68,7 +67,6 @@ public class XmlParserHandler extends DefaultHandler {
 			this.meterMakeCode = attributes.getValue("CODE");
 			if(StringUtils.isBlank(this.meterMakeCode))
 				throw new SAXException("Meter make code is null/blank");
-			System.out.println("Meter make code: " + this.meterMakeCode);			
 		}
 		
 		if("D3-00".equals(qName) ) {
@@ -77,7 +75,6 @@ public class XmlParserHandler extends DefaultHandler {
 				throw new SAXException("Date field value is null/blank");
 			
 			this.readingDate = dateAttributeValue.split(" ", 2)[0];
-			System.out.println("Reading Date: " + this.readingDate);
 		}
 	}
 
@@ -100,20 +97,27 @@ public class XmlParserHandler extends DefaultHandler {
 				if(StringUtils.isBlank(value))
 					throw new SAXException("Meter number is null/blank");					
 
-				System.out.println("Meter number: " + value);
 				this.meterNumber = value;
 			}
 		}
 	}
 	
 	public void endDocument() throws SAXException{
+		//log the parser output to file
+		printWriter.println("Meter Number: " + this.meterNumber);
+		printWriter.println("Meter make code: " + this.meterMakeCode);
+		printWriter.println("Reading Date: " + this.readingDate);
+		printWriter.println("B3 Value: " + this.b3Value);
+		printWriter.println("B5 Value: " + this.b5Value);
+		printWriter.println("B9 Value: " + this.b9Value + "\n");
 	}
 
 	private String currentElement() {
 		return this.elementStack.peek();
 	}
 
-	public XmlParserHandler() {
+	public XmlParserHandler(PrintWriter printWriter) {
+		this.printWriter = printWriter;
 		this.b3ParamCodes = new ArrayList<>();
 		this.b5ParamCodes = new ArrayList<>();
 		this.b9ParamCodes = new ArrayList<>();
