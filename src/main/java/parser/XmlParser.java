@@ -1,13 +1,15 @@
 package parser;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
+
+import http.HttpRequestsHandler;
 
 public class XmlParser {
 
@@ -16,50 +18,52 @@ public class XmlParser {
 		File directory = new File(xmlFilesDirectory);
 		int exceptionCount = 0;
 		File[] allXmlFiles = directory.listFiles();
-		
-		//create file for logging the output (delete the file if it exists)
+
+		// create file for logging the output (delete the file if it exists)
 		File outputFile = new File("C:\\Users\\Napster\\Downloads\\NGB\\Output\\parserOutput.txt");
-		if(outputFile.exists())
+		if (outputFile.exists())
 			outputFile.delete();
 		outputFile.createNewFile();
 		PrintWriter printWriter = new PrintWriter(outputFile);
-		
+
+		// Initialize http request handler
+		HttpRequestsHandler.initializeHttpRequestHandler();
+
 		System.out.println("Parsing all xml files in the directory ...");
-		for(File xmlFile: allXmlFiles) {
-			if(xmlFile.isFile()) {
+		for (File xmlFile : allXmlFiles) {
+			if (xmlFile.isFile()) {
 				SAXParserFactory factory = SAXParserFactory.newInstance();
 				SAXParser parser = factory.newSAXParser();
 				try {
-					//log the file name
+					// log the file name
 					logFileName(printWriter, xmlFile);
-					
-					parser.parse(xmlFile, new XmlParserHandler(printWriter));							
-				}catch(SAXException exception) {
-					//log the exception
+
+					parser.parse(xmlFile, new XmlParserHandler(printWriter));
+				} catch (IOException exception) {
+					// log the exception
 					logException(printWriter, exception.getMessage());
-					
+
 					++exceptionCount;
-					continue;
 				}
 			}
 		}
-		
+
 		printWriter.close();
 		System.out.println("\nParsing complete!");
 		System.out.println("Total files found in the directory: " + allXmlFiles.length);
 		System.out.println("Number of files successfully parsed: " + (allXmlFiles.length - exceptionCount));
-		System.out.println("Number of files which couldn't be parsed: " + exceptionCount);		
+		System.out.println("Number of files which couldn't be parsed: " + exceptionCount);
 		System.out.println("\nRefer to the log file for more details");
 	}
-	
+
 	private static void logFileName(PrintWriter printWriter, File xmlFile) {
-		printWriter.println("File Name: " + xmlFile.getName());		
+		printWriter.println("File Name: " + xmlFile.getName());
 		printWriter.println("-----------------------------------------------------");
 	}
-	
+
 	private static void logException(PrintWriter printWriter, String exceptionMessage) {
 		printWriter.println("Couldn't parse this xml file");
 		printWriter.println("Error: " + exceptionMessage + "\n");
 	}
-	
+
 }
